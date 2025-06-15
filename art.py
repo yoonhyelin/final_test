@@ -68,17 +68,35 @@ def fetch_events_from_interpark():
     return events
 
 def recommend_today_event():
-    evs   = fetch_events_from_interpark()
-    today = datetime.today().strftime("%Y.%m.%d")
-    print(f"\n📅 오늘({today}) 볼 수 있는 이벤트:")
+    evs      = fetch_events_from_interpark()
+    today_dt = datetime.today().date()
+    print(f"\n📅 오늘({today_dt.strftime('%Y.%m.%d')}) 볼 수 있는 이벤트:")
     found = False
+
     for e in evs:
-        if today in e["date"]:
+        # 1) "2025.06.06~ 2026.02.22" → ["2025.06.06", "2026.02.22"]
+        parts = e["date"].split("~")
+        if len(parts) != 2:
+            continue
+
+        start_str = parts[0].strip()
+        end_str   = parts[1].strip()
+
+        try:
+            start_dt = datetime.strptime(start_str, "%Y.%m.%d").date()
+            end_dt   = datetime.strptime(end_str,   "%Y.%m.%d").date()
+        except ValueError:
+            # 파싱 실패 시 건너뜀
+            continue
+
+        # 2) 오늘 날짜가 범위 안에 들어있다면 출력
+        if start_dt <= today_dt <= end_dt:
             print(f"✅ {e['title']}")
             print(f"   📍 {e['venue']}")
             print(f"   🗓️ {e['date']}")
             print(f"   🔗 {e['link']}\n")
             found = True
+
     if not found:
         print("😢 오늘 볼 수 있는 이벤트가 없습니다.")
 
