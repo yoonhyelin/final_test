@@ -54,9 +54,79 @@ def fetch_events_from_interpark():
         # 기간 (두 번째 td.Rkdate)
         date_cells = tr.select("td.Rkdate")
         if len(date_cells) > 1:
-            period = date_cells[1].get_text(" 장 볼 수 있는 이벤트 추천")
-    print("2. 지역별 이벤트 찾기")
-    print("3. 관심사 키워드로 이벤트 검색")
+            period = date_cells[1].get_text(" ", strip=True)
+        else:
+            period = "기간 정보 없음"
+
+        events.append({
+            "title": title,
+            "link":  link,
+            "venue": venue,
+            "date":  period
+        })
+
+    return events
+
+def recommend_today_event():
+    evs      = fetch_events_from_interpark()
+    today_dt = datetime.today().date()
+    print(f"\n📅 오늘({today_dt.strftime('%Y.%m.%d')}) 볼 수 있는 이벤트:")
+    found = False
+
+    for e in evs:
+        # 1) "2025.06.06~ 2026.02.22" → ["2025.06.06", "2026.02.22"]
+        parts = e["date"].split("~")
+        if len(parts) != 2:
+            continue
+
+        start_str = parts[0].strip()
+        end_str   = parts[1].strip()
+
+        try:
+            start_dt = datetime.strptime(start_str, "%Y.%m.%d").date()
+            end_dt   = datetime.strptime(end_str,   "%Y.%m.%d").date()
+        except ValueError:
+            # 파싱 실패 시 건너뜀
+            continue
+
+        # 2) 오늘 날짜가 범위 안에 들어있다면 출력
+        if start_dt <= today_dt <= end_dt:
+            print(f"✅ {e['title']}")
+            print(f"   📍 {e['venue']}")
+            print(f"   🗓️ {e['date']}")
+            print(f"   🔗 {e['link']}\n")
+            found = True
+
+    if not found:
+        print("😢 오늘 볼 수 있는 이벤트가 없습니다.")
+        
+def search_by_region_event():
+    region = input("찾을 지역(장소) 키워드 > ").strip()
+    evs    = fetch_events_from_interpark()
+    results = [e for e in evs if region in e["venue"]]
+    print(f"\n📍 '{region}' 지역 이벤트 {len(results)}건:")
+    if results:
+        for e in results:
+            print(f"✅ {e['title']}  | 장소: {e['venue']}  | 기간: {e['date']}  | 링크: {e['link']}")
+    else:
+        print("😢 해당 지역 이벤트가 없습니다.")
+
+def search_by_keyword_event():
+    kw  = input("검색할 키워드 > ").strip()
+    evs = fetch_events_from_interpark()
+    results = [e for e in evs if kw in e["title"]]
+    print(f"\n🔍 제목에 '{kw}' 포함 이벤트 {len(results)}건:")
+    if results:
+        for e in results:
+            print(f"✅ {e['title']}  | 장소: {e['venue']}  | 기간: {e['date']}  | 링크: {e['link']}")
+    else:
+        print("😢 해당 키워드 이벤트가 없습니다.")
+
+def show_menu():
+    print("\n🎪 개최중인 이벤트 🎪")
+    print("1. 오늘 볼 수 있는 이벤트 추천")
+    print("2. 주변 지역별 이벤트 찾기")
+    print("3. 관심 키워드로 이벤트 검색")
     print("4. 종료하기")
 
 def main():
