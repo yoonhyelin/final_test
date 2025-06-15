@@ -14,7 +14,7 @@ def fetch_exhibitions_from_naver(query):
     exhibitions = []
     # 아래는 아직 구현 중일 수 있음
     return exhibitions
-
+    
 def recommend_today(exhibitions):
     today = datetime.today().strftime("%m.%d")
     print(f"\n📅 오늘({today}) 추천 전시:")
